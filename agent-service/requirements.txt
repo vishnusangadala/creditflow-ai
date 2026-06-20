@@ -1,0 +1,12 @@
+# Pinned-ish runtime deps (mirror of pyproject [project].dependencies).
+# Kept as a plain requirements.txt so the Dockerfile and `pip install -r` work
+# without a build backend step.
+fastapi>=0.115
+uvicorn[standard]>=0.32
+langgraph>=0.2.50
+langchain-core>=0.3.20
+langchain-openai>=0.2.10
+langsmith>=0.1.140
+pydantic>=2.9
+pydantic-settings>=2.6
+pypdf>=5.1

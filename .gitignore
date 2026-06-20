@@ -1,0 +1,22 @@
+# OS
+.DS_Store
+
+# secrets
+.env
+
+# backend (Java / Maven)
+backend/target/
+
+# agent-service (Python)
+agent-service/.venv/
+agent-service/__pycache__/
+**/__pycache__/
+*.pyc
+.pytest_cache/
+
+# frontend (Node)
+frontend/node_modules/
+frontend/dist/
+
+# uploaded files (local dev)
+data/

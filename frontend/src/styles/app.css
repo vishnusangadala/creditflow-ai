@@ -1,0 +1,260 @@
+:root {
+  --bg: #0f1115;
+  --panel: #171a21;
+  --card: #1d212b;
+  --border: #2a2f3a;
+  --text: #e6e8ec;
+  --muted: #8b929f;
+  --accent: #4f8cff;
+  --green: #2faf6a;
+  --amber: #d9a228;
+  --red: #d9534f;
+  --blue: #4f8cff;
+  --grey: #6b7280;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 14px;
+}
+
+.app-header {
+  padding: 18px 24px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+}
+.app-header h1 {
+  margin: 0;
+  font-size: 20px;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: 340px 1fr;
+  gap: 20px;
+  padding: 20px 24px;
+  align-items: start;
+}
+
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px;
+}
+.panel h2 {
+  margin: 0 0 8px;
+  font-size: 15px;
+}
+
+.muted {
+  color: var(--muted);
+}
+.small {
+  font-size: 12px;
+}
+.error {
+  color: var(--red);
+}
+
+button.primary {
+  margin-top: 12px;
+  width: 100%;
+  background: var(--accent);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 10px;
+  font-weight: 600;
+  cursor: pointer;
+}
+button.primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.file-list {
+  margin: 10px 0 0;
+  padding-left: 18px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.workflow-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.workflow-list li {
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  margin-bottom: 8px;
+  cursor: pointer;
+}
+.workflow-list li.selected {
+  border-color: var(--accent);
+  background: #1a2030;
+}
+.row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+.badge-green { background: rgba(47, 175, 106, 0.18); color: var(--green); }
+.badge-amber { background: rgba(217, 162, 40, 0.18); color: var(--amber); }
+.badge-red { background: rgba(217, 83, 79, 0.18); color: var(--red); }
+.badge-blue { background: rgba(79, 140, 255, 0.18); color: var(--blue); }
+.badge-grey { background: rgba(107, 114, 128, 0.18); color: var(--grey); }
+
+.content {
+  min-height: 60vh;
+}
+.empty {
+  color: var(--muted);
+  padding: 40px;
+  text-align: center;
+}
+
+.detail-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+}
+.detail-header h2 {
+  margin: 0;
+}
+
+.notice {
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin-bottom: 14px;
+  font-size: 13px;
+}
+.notice-amber { background: rgba(217, 162, 40, 0.12); border: 1px solid var(--amber); }
+.notice-red { background: rgba(217, 83, 79, 0.12); border: 1px solid var(--red); }
+.notice-blue { background: rgba(79, 140, 255, 0.12); border: 1px solid var(--blue); }
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+.card h3 {
+  margin: 0 0 12px;
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.card h4 {
+  margin: 14px 0 4px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.tag {
+  font-size: 10px;
+  background: rgba(79, 140, 255, 0.18);
+  color: var(--accent);
+  padding: 2px 6px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.field-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.field-label {
+  font-size: 12px;
+  color: var(--muted);
+}
+.field-value {
+  font-weight: 600;
+}
+.evidence {
+  font-size: 12px;
+  color: var(--muted);
+  font-style: italic;
+  margin-top: 2px;
+}
+
+.metric-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+.metric-card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px;
+}
+.metric-name {
+  font-size: 12px;
+  color: var(--muted);
+}
+.metric-value {
+  font-size: 24px;
+  font-weight: 700;
+  margin: 4px 0;
+}
+.metric-note {
+  color: var(--amber);
+}
+
+.reasons {
+  margin: 0;
+  padding-left: 18px;
+}
+.recommendation {
+  font-weight: 600;
+}
+
+.check-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.check-table th,
+.check-table td {
+  text-align: left;
+  padding: 8px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+.check-table th {
+  color: var(--muted);
+  font-weight: 600;
+  font-size: 12px;
+}
