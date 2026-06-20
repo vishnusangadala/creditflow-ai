@@ -15,9 +15,13 @@ import com.creditflow.agent.client.AgentRunRequest;
 import com.creditflow.agent.client.AgentRunResult;
 import com.creditflow.agent.client.AgentServiceClient;
 import com.creditflow.agent.service.AgentResultPersister;
+import com.creditflow.audit.domain.AuditEventType;
+import com.creditflow.audit.service.AuditEventService;
+import com.creditflow.common.ActorRole;
 import com.creditflow.document.domain.Document;
 import com.creditflow.document.repository.DocumentRepository;
 import com.creditflow.document.service.DocumentStorageService;
+import com.creditflow.review.service.ReviewService;
 import com.creditflow.workflow.domain.RiskCategory;
 import com.creditflow.workflow.domain.Workflow;
 import com.creditflow.workflow.domain.WorkflowStatus;
@@ -42,17 +46,23 @@ public class WorkflowProcessor {
     private final AgentServiceClient agentServiceClient;
     private final AgentResultPersister persister;
     private final WorkflowRepository workflowRepository;
+    private final ReviewService reviewService;
+    private final AuditEventService audit;
 
     public WorkflowProcessor(DocumentRepository documentRepository,
                              DocumentStorageService storageService,
                              AgentServiceClient agentServiceClient,
                              AgentResultPersister persister,
-                             WorkflowRepository workflowRepository) {
+                             WorkflowRepository workflowRepository,
+                             ReviewService reviewService,
+                             AuditEventService audit) {
         this.documentRepository = documentRepository;
         this.storageService = storageService;
         this.agentServiceClient = agentServiceClient;
         this.persister = persister;
         this.workflowRepository = workflowRepository;
+        this.reviewService = reviewService;
+        this.audit = audit;
     }
 
     @Async("workflowExecutor")
@@ -73,11 +83,20 @@ public class WorkflowProcessor {
                     ? null : RiskCategory.valueOf(result.riskCategory());
             workflow.complete(status, result.borrowerName(), risk);
             workflowRepository.save(workflow);
+
+            audit.record(workflowId, AuditEventType.WORKFLOW_PROCESSED, "system", ActorRole.SYSTEM,
+                    "Processing finished: " + status, null);
+            // Governance gate: create the review (or auto-approve) for terminal outcomes.
+            if (status == WorkflowStatus.COMPLETED || status == WorkflowStatus.NEEDS_REVIEW) {
+                reviewService.createOnCompletion(workflowId, status, risk);
+            }
             log.info("Workflow {} finished with status {}", workflowId, status);
         } catch (Exception e) {
             log.error("Workflow {} failed", workflowId, e);
             workflow.fail(e.getMessage());
             workflowRepository.save(workflow);
+            audit.record(workflowId, AuditEventType.WORKFLOW_PROCESSED, "system", ActorRole.SYSTEM,
+                    "Processing failed: " + e.getMessage(), null);
         }
     }
 

@@ -10,11 +10,15 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public record CreditFlowProperties(
         AgentService agentService,
         Storage storage,
-        Cors cors
+        Cors cors,
+        Governance governance
 ) {
     public record AgentService(String baseUrl, int timeoutSeconds) {}
 
     public record Storage(String uploadDir) {}
 
     public record Cors(String allowedOrigins) {}
+
+    /** Phase 2 governance policy knobs. Config-driven for now; a rules table is future work. */
+    public record Governance(boolean requireReviewOnHighRisk) {}
 }

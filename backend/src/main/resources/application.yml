@@ -33,6 +33,9 @@ creditflow:
     upload-dir: ${UPLOAD_DIR:./data/uploads}
   cors:
     allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173}
+  governance:
+    # When true, COMPLETED workflows with HIGH risk still require a human sign-off.
+    require-review-on-high-risk: ${REQUIRE_REVIEW_ON_HIGH_RISK:true}
 
 management:
   endpoints:

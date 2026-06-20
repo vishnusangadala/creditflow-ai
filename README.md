@@ -8,9 +8,10 @@ trust it.
 > **Core principle:** never blindly trust AI.
 > **Agent → Verification → (Human Review) → Approval.**
 
-This repository is **Phase 1**: the core AI workflow, end to end. Phase 2 (human
-review queue, audit trails, evaluation dashboard, governance) is scoped but not
-built — see [the bottom of this file](#phase-2-not-yet-built).
+This repository now contains **both phases**: Phase 1 is the core AI workflow
+end-to-end; **Phase 2** adds the trust, governance, and learning machinery around
+it — human review, audit trails, evaluation, and analytics. See
+[`docs/phase2.md`](docs/phase2.md).
 
 ---
 
@@ -137,9 +138,19 @@ cd backend && mvn test
 - **Async via Spring `@Async`, not a broker.** A real queue is a Phase 2 concern;
   adding it now would be premature.
 
-## Phase 2 (not yet built)
+## Phase 2 (built)
 
-Human Review Queue · Audit Trails · Evaluation Dashboard · Failure Taxonomy ·
-Human Corrections · Learning Loop · Workflow Analytics · Governance · Advanced
-Observability. The Phase 1 schema (`NEEDS_REVIEW` state, run/output separation,
-verification records) is designed so Phase 2 is additive.
+Three subsystems on one append-only **audit backbone** — full design in
+[`docs/phase2.md`](docs/phase2.md):
+
+- **A · Review & Governance** — review queue, human corrections, failure taxonomy,
+  approve/reject decisions, and a config-driven governance policy (HIGH-risk or
+  failed-verification workflows require a human). Roles via `X-Actor`/`X-Role`
+  headers (switchable in the UI top-right).
+- **B · Evaluation & Learning Loop** — human corrections become **golden** eval
+  cases; a deterministic scorer grades extraction/metric accuracy, risk agreement,
+  and — the headline trust metrics — **verifier recall & precision**.
+- **C · Analytics & Observability** — `/api/v1/analytics` dashboard + global
+  `/api/v1/audit` event feed.
+
+The UI gains a top nav: **Workflows · Review queue · Evaluation · Analytics**.

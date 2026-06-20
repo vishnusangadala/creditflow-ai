@@ -16,6 +16,9 @@ import com.creditflow.agent.domain.VerificationResult;
 import com.creditflow.agent.repository.AgentOutputRepository;
 import com.creditflow.agent.repository.AgentRunRepository;
 import com.creditflow.agent.repository.VerificationResultRepository;
+import com.creditflow.audit.domain.AuditEventType;
+import com.creditflow.audit.service.AuditEventService;
+import com.creditflow.common.Actor;
 import com.creditflow.common.ResourceNotFoundException;
 import com.creditflow.document.domain.Document;
 import com.creditflow.document.repository.DocumentRepository;
@@ -41,6 +44,7 @@ public class WorkflowService {
     private final AgentOutputRepository agentOutputRepository;
     private final VerificationResultRepository verificationResultRepository;
     private final WorkflowProcessor workflowProcessor;
+    private final AuditEventService audit;
     private final ObjectMapper objectMapper;
 
     public WorkflowService(WorkflowRepository workflowRepository,
@@ -50,6 +54,7 @@ public class WorkflowService {
                            AgentOutputRepository agentOutputRepository,
                            VerificationResultRepository verificationResultRepository,
                            WorkflowProcessor workflowProcessor,
+                           AuditEventService audit,
                            ObjectMapper objectMapper) {
         this.workflowRepository = workflowRepository;
         this.documentRepository = documentRepository;
@@ -58,11 +63,12 @@ public class WorkflowService {
         this.agentOutputRepository = agentOutputRepository;
         this.verificationResultRepository = verificationResultRepository;
         this.workflowProcessor = workflowProcessor;
+        this.audit = audit;
         this.objectMapper = objectMapper;
     }
 
     @Transactional
-    public WorkflowResponses.Created createWorkflow(List<MultipartFile> files) {
+    public WorkflowResponses.Created createWorkflow(List<MultipartFile> files, Actor actor) {
         validate(files);
 
         Workflow workflow = Workflow.createNew();
@@ -81,6 +87,9 @@ public class WorkflowService {
 
         workflow.markProcessing();
         workflowRepository.save(workflow);
+
+        audit.record(workflow.getId(), AuditEventType.WORKFLOW_CREATED, actor.name(), actor.role(),
+                "Uploaded " + files.size() + " document(s)", null);
 
         // Runs on the workflow executor; returns immediately.
         workflowProcessor.process(workflow.getId());

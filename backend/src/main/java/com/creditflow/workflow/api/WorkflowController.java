@@ -8,11 +8,13 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.creditflow.common.Actor;
 import com.creditflow.workflow.service.WorkflowService;
 
 /**
@@ -32,8 +34,10 @@ public class WorkflowController {
     /** Upload one or more PDFs and start the multi-agent analysis. Returns 202. */
     @PostMapping
     public ResponseEntity<WorkflowResponses.Created> create(
-            @RequestParam("files") List<MultipartFile> files) {
-        WorkflowResponses.Created created = workflowService.createWorkflow(files);
+            @RequestParam("files") List<MultipartFile> files,
+            @RequestHeader(value = "X-Actor", required = false) String actor,
+            @RequestHeader(value = "X-Role", required = false) String role) {
+        WorkflowResponses.Created created = workflowService.createWorkflow(files, Actor.of(actor, role));
         return ResponseEntity.status(HttpStatus.ACCEPTED).body(created);
     }
 
