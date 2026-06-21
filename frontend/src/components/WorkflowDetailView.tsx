@@ -26,18 +26,12 @@ export function WorkflowDetailView({ detail }: Props) {
       </header>
 
       {detail.status === "NEEDS_REVIEW" && (
-        <div className="notice notice-amber">
-          Verification flagged one or more checks. This workflow is held for human review.
-        </div>
+        <div className="notice notice-amber">Held for review — verification flagged one or more checks.</div>
       )}
       {detail.status === "FAILED" && (
         <div className="notice notice-red">{detail.errorMessage ?? "Processing failed."}</div>
       )}
-      {processing && (
-        <div className="notice notice-blue">
-          Agents are working through the document… this view refreshes automatically.
-        </div>
-      )}
+      {processing && <div className="notice notice-blue">Analyzing — results appear automatically.</div>}
 
       <section className="card">
         <h3>Documents</h3>

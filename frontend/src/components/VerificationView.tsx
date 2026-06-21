@@ -11,6 +11,7 @@ export function VerificationView({ checks }: Props) {
   if (checks.length === 0) {
     return null;
   }
+  const passed = checks.filter((c) => c.status === "PASS").length;
   const failed = checks.filter((c) => c.status === "FAIL").length;
   const warned = checks.filter((c) => c.status === "WARN").length;
 
@@ -18,8 +19,9 @@ export function VerificationView({ checks }: Props) {
     <section className="card">
       <h3>
         Verification{" "}
-        <span className="muted small">
-          {checks.length} checks · {failed} failed · {warned} warnings
+        <span className="muted small" style={{ fontWeight: 500, letterSpacing: "normal", textTransform: "none" }}>
+          {passed} passed{warned ? ` · ${warned} warning${warned > 1 ? "s" : ""}` : ""}
+          {failed ? ` · ${failed} failed` : ""}
         </span>
       </h3>
       <table className="check-table">
@@ -41,7 +43,7 @@ export function VerificationView({ checks }: Props) {
               <td className="small">{c.target}</td>
               <td className="small">
                 {c.actual && <div>{c.actual}</div>}
-                {c.evidence && <div className="evidence">“{c.evidence}”</div>}
+                {c.evidence && <div className="evidence">{c.evidence}</div>}
               </td>
             </tr>
           ))}

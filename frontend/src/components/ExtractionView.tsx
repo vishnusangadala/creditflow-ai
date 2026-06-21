@@ -8,8 +8,8 @@ function Field({ label, value, evidence }: { label: string; value?: string | nul
   return (
     <div className="field">
       <div className="field-label">{label}</div>
-      <div className="field-value">{value ?? <span className="muted">— not found —</span>}</div>
-      {evidence && <div className="evidence">“{evidence}”</div>}
+      <div className="field-value">{value ?? <span className="muted">Not found</span>}</div>
+      {evidence && <div className="evidence">{evidence}</div>}
     </div>
   );
 }

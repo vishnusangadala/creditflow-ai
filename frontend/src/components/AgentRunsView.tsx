@@ -5,6 +5,11 @@ interface Props {
   runs: AgentRunView[];
 }
 
+function prettyAgent(type: string): string {
+  const s = type.replace(/_/g, " ").toLowerCase();
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
 // The audit/observability strip: every agent invocation with its latency, model
 // and token usage. Mirrors the agent_runs table.
 export function AgentRunsView({ runs }: Props) {
@@ -25,7 +30,7 @@ export function AgentRunsView({ runs }: Props) {
         <tbody>
           {runs.map((r) => (
             <tr key={r.id}>
-              <td className="small">{r.agentType.replace(/_/g, " ")}</td>
+              <td>{prettyAgent(r.agentType)}</td>
               <td>
                 <StatusBadge status={r.status} />
               </td>

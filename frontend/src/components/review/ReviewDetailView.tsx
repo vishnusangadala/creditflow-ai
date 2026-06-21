@@ -17,6 +17,16 @@ const DECISIONS = [
   { key: "REJECT", label: "Reject" },
 ];
 
+const REASON_LABELS: Record<string, string> = {
+  VERIFICATION_FAILED: "Verification failed",
+  HIGH_RISK: "High risk",
+};
+
+function formatReason(reason: string | null): string {
+  if (!reason) return "Auto-approved by policy";
+  return REASON_LABELS[reason] ?? reason.replace(/_/g, " ").toLowerCase();
+}
+
 export function ReviewDetailView({ workflowId, onBack }: Props) {
   const [detail, setDetail] = useState<ReviewDetail | null>(null);
   const [reason, setReason] = useState("");
@@ -61,18 +71,20 @@ export function ReviewDetailView({ workflowId, onBack }: Props) {
   return (
     <div className="detail">
       <header className="detail-header">
-        <button className="link" onClick={onBack}>← back to queue</button>
+        <div>
+          <button className="link" onClick={onBack} style={{ paddingLeft: 0 }}>← Back to queue</button>
+          <h2 style={{ marginTop: 6 }}>{detail.workflow.borrowerName ?? "Review"}</h2>
+        </div>
         <StatusBadge status={review.status} />
       </header>
 
       <section className="card">
         <div className="row">
-          <h3>Review · {detail.workflow.borrowerName ?? "Workflow"}</h3>
-          {!review.decision && <button className="link" onClick={assign}>assign to me</button>}
+          <h3>Decision</h3>
+          {!review.decision && <button className="link" onClick={assign}>Assign to me</button>}
         </div>
         <div className="small muted">
-          Required: {review.requiredReason ?? "policy auto-approved"} · Assignee:{" "}
-          {review.assignee ?? "unassigned"}
+          Reason: {formatReason(review.requiredReason)} · Assignee: {review.assignee ?? "Unassigned"}
         </div>
         {review.decision && (
           <div className="notice notice-blue" style={{ marginTop: 10 }}>
@@ -101,9 +113,7 @@ export function ReviewDetailView({ workflowId, onBack }: Props) {
               ))}
             </div>
             {!canDecide && (
-              <p className="small muted">
-                Switch role to REVIEWER or ADMIN (top right) to make a decision.
-              </p>
+              <p className="small muted">Switch to a Reviewer role (top right) to decide.</p>
             )}
           </div>
         )}

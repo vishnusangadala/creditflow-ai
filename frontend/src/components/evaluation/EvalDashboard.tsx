@@ -76,12 +76,7 @@ export function EvalDashboard() {
   return (
     <div className="eval">
       <div className="card">
-        <h3>Evaluation datasets</h3>
-        <p className="muted small">
-          Promote a reviewed workflow into a dataset (its human-corrected values become the golden
-          answer), then run an evaluation to score the agents — including whether the Verifier caught
-          the errors humans found.
-        </p>
+        <h3>Datasets</h3>
         <div className="form-grid">
           <label>Name<input value={name} onChange={(e) => setName(e.target.value)} /></label>
           <label>Description<input value={desc} onChange={(e) => setDesc(e.target.value)} /></label>
@@ -112,12 +107,12 @@ export function EvalDashboard() {
           </div>
 
           <div className="promote-box">
-            <h4>Promote a workflow → golden case (learning loop)</h4>
+            <h4>Add case from workflow</h4>
             <div className="form-grid">
               <label>Workflow ID<input value={promoteId} onChange={(e) => setPromoteId(e.target.value)} /></label>
               <label>Case name<input value={caseName} onChange={(e) => setCaseName(e.target.value)} /></label>
             </div>
-            <button className="link" onClick={promote} disabled={!promoteId}>promote</button>
+            <button className="link" onClick={promote} disabled={!promoteId}>Add case</button>
           </div>
 
           {error && <p className="error">{error}</p>}
