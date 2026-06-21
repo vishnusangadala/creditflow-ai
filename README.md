@@ -1,156 +1,66 @@
 # CreditFlow AI
 
-An early version of a financial AI operations platform: a **multi-agent workflow**
-that reads credit documents, extracts facts, computes risk metrics, drafts a
-credit memo — and then **verifies its own work** before a human is ever asked to
-trust it.
+A multi-agent system that reads loan documents, extracts the key terms, computes
+the risk ratios, and drafts a credit memo. It checks its own output and sends
+anything questionable to a human before approval.
 
-> **Core principle:** never blindly trust AI.
-> **Agent → Verification → (Human Review) → Approval.**
+## How it works
 
-This repository now contains **both phases**: Phase 1 is the core AI workflow
-end-to-end; **Phase 2** adds the trust, governance, and learning machinery around
-it — human review, audit trails, evaluation, and analytics. See
-[`docs/phase2.md`](docs/phase2.md).
+Each document runs through five agents:
 
----
+1. **Extraction** (LLM) – borrower, interest rate, maturity, collateral, covenants
+   and the raw financial figures. Every value keeps the quote it came from.
+2. **Financial analysis** (plain Python) – Debt/EBITDA, current ratio, interest
+   coverage. No LLM touches the math.
+3. **Risk assessment** (LLM) – a risk category and reasons, based on the metrics.
+4. **Credit memo** (LLM) – summary and recommendation.
+5. **Verifier** – checks that extracted values actually appear in the document,
+   re-computes the ratios, and compares the memo against the facts.
 
-## What it does
+If the verifier flags something, the workflow ends in `NEEDS_REVIEW` and goes to a
+reviewer. There's also a review queue, human corrections, an audit trail, and an
+evaluation step that scores the agents against human-corrected cases.
 
-Upload one or more PDFs (loan agreements, financial statements). Five agents run
-in sequence:
+## Stack
 
-| # | Agent | Type | Produces |
-|---|-------|------|----------|
-| 1 | Extraction | LLM (+ evidence) | borrower, interest rate, maturity, collateral, covenants, financial line items — each with a source quote |
-| 2 | Financial Analysis | **deterministic Python** | Debt/EBITDA, Current Ratio, Interest Coverage |
-| 3 | Risk Assessment | LLM | risk category + reasons, grounded in the metrics |
-| 4 | Credit Memo | LLM | executive / financial / risk summaries + recommendation |
-| 5 | Verifier | **code + LLM** | grounding, recomputation, and memo-alignment checks |
+React + TypeScript, Java 21 + Spring Boot, PostgreSQL, Python + FastAPI +
+LangGraph, OpenAI, LangSmith, Docker.
 
-If the Verifier flags anything, the workflow ends in **`NEEDS_REVIEW`** instead of
-`COMPLETED` — the hand-off point for Phase 2's human queue.
+## Run it
 
-## Architecture
-
-```
-React + TS  ──upload/poll──▶  Spring Boot (orchestrator + system of record)  ──JPA──▶  PostgreSQL
-                                        │
-                                        └──HTTP /run──▶  Python FastAPI + LangGraph  ──▶  OpenAI
-                                                              (5 agents, LangSmith tracing)
-```
-
-Full write-ups: [architecture](docs/architecture.md) ·
-[database schema](docs/database-schema.md) · [API design](docs/api-design.md).
-
-## Tech stack
-
-React · TypeScript · Java 21 · Spring Boot · PostgreSQL · Python · LangGraph ·
-OpenAI · LangSmith · Docker.
-
-## Folder structure
-
-```
-creditflow-ai/
-├── docker-compose.yml          # full local stack
-├── .env.example                # OPENAI_API_KEY etc.
-├── docs/                       # architecture, schema, API design
-├── backend/                    # Java 21 + Spring Boot
-│   └── src/main/java/com/creditflow/
-│       ├── workflow/  document/  agent/   # feature packages (api/domain/repository/service)
-│       ├── config/    common/
-│       └── src/main/resources/db/migration # Flyway V1__init.sql
-├── agent-service/              # Python + FastAPI + LangGraph
-│   └── app/
-│       ├── graph/  (builder, state, nodes/)   # the 5-agent workflow
-│       ├── services/ (financial, pdf, verification, runner)
-│       ├── core/  domain/  prompts/  api/
-└── frontend/                   # React + TypeScript (Vite)
-    └── src/ (api/ types/ components/ styles/)
-```
-
----
-
-## Running it
-
-### Option A — Docker (everything)
+Needs Docker and an OpenAI API key.
 
 ```bash
-cp .env.example .env          # then put your real OPENAI_API_KEY in .env
+cp .env.example .env      # add your OPENAI_API_KEY
 docker compose up --build
 ```
 
-- Frontend: <http://localhost:3000>
-- Backend API: <http://localhost:8080/api/v1/workflows>
-- Agent service: <http://localhost:8000/health>
+- App – http://localhost:3000
+- API – http://localhost:8080
+- Agents – http://localhost:8000
 
-### Option B — local dev (per service)
+## Layout
 
-**1. Postgres**
-```bash
-docker compose up -d postgres
 ```
-
-**2. Agent service** (Python 3.11+)
-```bash
-cd agent-service
-python3 -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt
-export OPENAI_API_KEY=sk-...
-uvicorn app.main:app --reload --port 8000
-```
-
-**3. Backend** (Java 21)
-```bash
-cd backend
-mvn spring-boot:run
-# targets Java 21; if running on a newer JDK, byte-buddy may need:
-#   MAVEN_OPTS=-Dnet.bytebuddy.experimental=true mvn spring-boot:run
-```
-
-**4. Frontend** (Node 20)
-```bash
-cd frontend
-npm install
-npm run dev     # http://localhost:5173 (proxies /api to :8080)
+backend/         Spring Boot – API, persistence, orchestration
+agent-service/   Python – the LangGraph agents
+frontend/        React UI
+docs/            architecture, schema, API notes
 ```
 
 ## Tests
 
 ```bash
-# deterministic financial engine (no LLM, no network)
-cd agent-service && pip install pydantic pytest && python -m pytest tests -q
-
-# backend mapping logic
 cd backend && mvn test
+cd agent-service && pip install pydantic pytest && pytest tests
 ```
 
----
+## Notes
 
-## Design decisions worth calling out
+- The ratios are computed in Python, and the verifier re-derives them, so the math
+  is reproducible.
+- Each extracted field stores its source quote, which is what makes verification
+  possible.
+- Processing happens in the background after upload; the UI polls for the result.
 
-- **Math is never done by an LLM.** Ratios are pure Python (`services/financial.py`)
-  and the Verifier *re-derives* them to catch drift.
-- **Provenance is captured at extraction time** (a source quote per field). Without
-  it, verification later would be impossible.
-- **`agent_runs` (telemetry) is separate from `agent_outputs` (content)** so re-runs
-  preserve history instead of overwriting audit records.
-- **Async via Spring `@Async`, not a broker.** A real queue is a Phase 2 concern;
-  adding it now would be premature.
-
-## Phase 2 (built)
-
-Three subsystems on one append-only **audit backbone** — full design in
-[`docs/phase2.md`](docs/phase2.md):
-
-- **A · Review & Governance** — review queue, human corrections, failure taxonomy,
-  approve/reject decisions, and a config-driven governance policy (HIGH-risk or
-  failed-verification workflows require a human). Roles via `X-Actor`/`X-Role`
-  headers (switchable in the UI top-right).
-- **B · Evaluation & Learning Loop** — human corrections become **golden** eval
-  cases; a deterministic scorer grades extraction/metric accuracy, risk agreement,
-  and — the headline trust metrics — **verifier recall & precision**.
-- **C · Analytics & Observability** — `/api/v1/analytics` dashboard + global
-  `/api/v1/audit` event feed.
-
-The UI gains a top nav: **Workflows · Review queue · Evaluation · Analytics**.
+More detail in [`docs/`](docs/).
