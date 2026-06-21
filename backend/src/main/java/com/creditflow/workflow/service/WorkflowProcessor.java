@@ -10,6 +10,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.event.TransactionPhase;
+import org.springframework.transaction.event.TransactionalEventListener;
 
 import com.creditflow.agent.client.AgentRunRequest;
 import com.creditflow.agent.client.AgentRunResult;
@@ -65,11 +67,23 @@ public class WorkflowProcessor {
         this.audit = audit;
     }
 
+    /**
+     * Starts processing only AFTER the create transaction commits, so the new
+     * workflow row is visible to this (separate) thread. Firing inside the
+     * creating transaction caused the row to be invisible here — the original
+     * race that left workflows stuck in PROCESSING.
+     */
     @Async("workflowExecutor")
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    public void onWorkflowCreated(WorkflowCreatedEvent event) {
+        process(event.workflowId());
+    }
+
     public void process(UUID workflowId) {
         log.info("Processing workflow {}", workflowId);
-        Workflow workflow = workflowRepository.findById(workflowId).orElseThrow();
+        Workflow workflow = null;
         try {
+            workflow = workflowRepository.findById(workflowId).orElseThrow();
             List<Document> documents = documentRepository.findByWorkflowIdOrderByCreatedAt(workflowId);
             AgentRunRequest request = buildRequest(workflowId, documents);
 
@@ -93,10 +107,12 @@ public class WorkflowProcessor {
             log.info("Workflow {} finished with status {}", workflowId, status);
         } catch (Exception e) {
             log.error("Workflow {} failed", workflowId, e);
-            workflow.fail(e.getMessage());
-            workflowRepository.save(workflow);
-            audit.record(workflowId, AuditEventType.WORKFLOW_PROCESSED, "system", ActorRole.SYSTEM,
-                    "Processing failed: " + e.getMessage(), null);
+            if (workflow != null) {
+                workflow.fail(e.getMessage());
+                workflowRepository.save(workflow);
+                audit.record(workflowId, AuditEventType.WORKFLOW_PROCESSED, "system", ActorRole.SYSTEM,
+                        "Processing failed: " + e.getMessage(), null);
+            }
         }
     }
 

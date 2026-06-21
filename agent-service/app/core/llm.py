@@ -50,7 +50,13 @@ def call_structured(schema: Type[T], system_prompt: str, user_prompt: str) -> tu
     usage, and the LangSmith run id when tracing is enabled.
     """
     model = get_chat_model()
-    structured = model.with_structured_output(schema, include_raw=True)
+    # Use function/tool calling rather than OpenAI's strict json_schema mode.
+    # Our schemas intentionally use optional fields (a value is null when not found
+    # in the document); strict mode rejects that by requiring every property to be
+    # listed as required. Function-calling handles optional fields cleanly.
+    structured = model.with_structured_output(
+        schema, method="function_calling", include_raw=True
+    )
     result = structured.invoke(
         [
             ("system", system_prompt),

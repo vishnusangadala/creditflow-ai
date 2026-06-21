@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -43,7 +44,7 @@ public class WorkflowService {
     private final AgentRunRepository agentRunRepository;
     private final AgentOutputRepository agentOutputRepository;
     private final VerificationResultRepository verificationResultRepository;
-    private final WorkflowProcessor workflowProcessor;
+    private final ApplicationEventPublisher events;
     private final AuditEventService audit;
     private final ObjectMapper objectMapper;
 
@@ -53,7 +54,7 @@ public class WorkflowService {
                            AgentRunRepository agentRunRepository,
                            AgentOutputRepository agentOutputRepository,
                            VerificationResultRepository verificationResultRepository,
-                           WorkflowProcessor workflowProcessor,
+                           ApplicationEventPublisher events,
                            AuditEventService audit,
                            ObjectMapper objectMapper) {
         this.workflowRepository = workflowRepository;
@@ -62,7 +63,7 @@ public class WorkflowService {
         this.agentRunRepository = agentRunRepository;
         this.agentOutputRepository = agentOutputRepository;
         this.verificationResultRepository = verificationResultRepository;
-        this.workflowProcessor = workflowProcessor;
+        this.events = events;
         this.audit = audit;
         this.objectMapper = objectMapper;
     }
@@ -91,8 +92,9 @@ public class WorkflowService {
         audit.record(workflow.getId(), AuditEventType.WORKFLOW_CREATED, actor.name(), actor.role(),
                 "Uploaded " + files.size() + " document(s)", null);
 
-        // Runs on the workflow executor; returns immediately.
-        workflowProcessor.process(workflow.getId());
+        // Processing starts only after THIS transaction commits (see
+        // WorkflowProcessor#onWorkflowCreated), so the row is visible to the worker.
+        events.publishEvent(new WorkflowCreatedEvent(workflow.getId()));
 
         return new WorkflowResponses.Created(workflow.getId(), workflow.getStatus().name());
     }
