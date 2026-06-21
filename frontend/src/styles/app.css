@@ -301,7 +301,7 @@ input[type="file"] { padding: 8px; border-style: dashed; cursor: pointer; width:
 .metric-value-inline { font-size: 18px; font-weight: 680; font-variant-numeric: tabular-nums; }
 
 /* ---------------- Analytics ---------------- */
-.stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 16px; }
+.stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 16px; }
 .stat-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px; box-shadow: var(--shadow); }
 .stat-value { font-size: 28px; font-weight: 680; font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
 .stat-label { margin-top: 4px; text-transform: uppercase; letter-spacing: 0.05em; font-size: 11px; }

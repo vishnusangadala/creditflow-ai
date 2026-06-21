@@ -50,7 +50,6 @@ export function AnalyticsDashboard() {
       <div className="stat-grid">
         <Stat label="Workflows" value={data.totalWorkflows} />
         <Stat label="Approval rate" value={`${Math.round(data.reviewApprovalRate * 100)}%`} />
-        <Stat label="Total tokens" value={data.totalTokens.toLocaleString()} />
         <Stat
           label="Verifier flags"
           value={(data.verificationByStatus.FAIL ?? 0) + (data.verificationByStatus.WARN ?? 0)}
