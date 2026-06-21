@@ -18,10 +18,7 @@ export function WorkflowDetailView({ detail }: Props) {
   return (
     <div className="detail">
       <header className="detail-header">
-        <div>
-          <h2>{detail.borrowerName ?? "Analysis"}</h2>
-          <span className="muted small">{detail.id}</span>
-        </div>
+        <h2>{detail.borrowerName ?? "Analysis"}</h2>
         <StatusBadge status={detail.status} />
       </header>
 
